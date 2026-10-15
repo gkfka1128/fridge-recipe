@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>냉장고야 부탁해 — 자취생 한 끼 레시피</title>
 <meta name="description" content="냉장고 속 재료를 고르면 자취방에서 15분 안에 만들 수 있는 1인분 레시피를 찾아 드려요.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -12,8 +15,11 @@
 
 <header class="top">
   <div class="wrap top-in">
-    <a class="logo" href="#">🧊 냉장고야 부탁해</a>
-    <nav>
+    <a class="logo" href="#">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 9h14M9 5v2M9 12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      냉장고야 부탁해
+    </a>
+    <nav aria-label="바로가기">
       <a href="#find">레시피 찾기</a>
       <a href="#basket">장바구니</a>
       <a href="#storage">보관법</a>
@@ -23,43 +29,73 @@
 </header>
 
 <section class="hero">
-  <div class="wrap">
-    <p class="eyebrow">자취생 한 끼 프로젝트</p>
-    <h1>필요한 만큼 사고,<br>남김없이 먹는 한 끼</h1>
-    <p class="lead">냉장고에 있는 재료를 고르면, 자취방에서 바로 만들 수 있는 레시피를 찾아 드려요.
-      남은 재료로 다음 끼니까지 이어 드릴게요.</p>
-    <ul class="rules">
-      <li><b>1인분</b> 기준</li>
-      <li><b>15분</b> 이내</li>
-      <li><b>1구 인덕션 · 전자레인지</b>만으로</li>
-      <li><b>기본 양념</b>만 사용</li>
-    </ul>
+  <div class="wrap hero-in">
+    <div class="hero-text">
+      <p class="kicker">자취생 한 끼 프로젝트</p>
+      <h1>필요한 만큼 사고,<br><mark>남김없이</mark> 먹는 한 끼</h1>
+      <p class="lead">냉장고에 있는 재료를 고르면 자취방에서 바로 만들 수 있는 레시피를 찾아 드려요.
+        남은 재료로 다음 끼니까지 이어 드릴게요.</p>
+      <div class="hero-cta">
+        <a class="btn" href="#find">내 냉장고 열기</a>
+        <a class="btn-line" href="#basket">이번 주 장바구니 보기</a>
+      </div>
+      <dl class="stats" id="stats"></dl>
+    </div>
+
+    <div class="fridge" aria-hidden="true">
+      <div class="door freezer">
+        <span class="handle"></span>
+        <span class="mag m1">🥚</span>
+        <span class="mag m2">🌿</span>
+      </div>
+      <div class="door main">
+        <span class="handle"></span>
+        <span class="note">오늘 뭐 먹지?<br><small>두부 반 모 남음!</small></span>
+        <span class="mag m3">🫘</span>
+        <span class="mag m4">🥬</span>
+        <span class="mag m5">🧅</span>
+        <span class="rule-tag">1인분 · 15분 · 기본 양념</span>
+      </div>
+    </div>
   </div>
 </section>
 
 <main>
   <section id="find" class="wrap block">
     <div class="block-head">
+      <p class="kicker">STEP 1</p>
       <h2>냉장고에 뭐가 있나요?</h2>
-      <p>있는 재료를 눌러 주세요. 기본 양념(<span id="pantry"></span>)은 있다고 칠게요.</p>
     </div>
 
-    <div id="chips" class="chips" role="group" aria-label="재료 선택"></div>
+    <div class="finder">
+      <aside class="panel" aria-label="내 냉장고">
+        <div class="panel-head">
+          <h3>내 냉장고</h3>
+          <button type="button" id="reset" class="link-btn">비우기</button>
+        </div>
+        <p class="panel-sub">있는 재료를 눌러 붙여 주세요.</p>
+        <div id="chips" class="chips" role="group" aria-label="재료 선택"></div>
 
-    <div class="toolbar">
-      <label class="toggle"><input type="checkbox" id="f-micro"> 전자레인지만</label>
-      <label class="toggle"><input type="checkbox" id="f-quick"> 10분 이내</label>
-      <label class="toggle"><input type="checkbox" id="f-ready"> 지금 바로 가능한 것만</label>
-      <button type="button" id="reset" class="ghost">선택 초기화</button>
+        <fieldset class="filters">
+          <legend>조건</legend>
+          <label class="pill"><input type="checkbox" id="f-ready"><span>지금 바로 가능</span></label>
+          <label class="pill"><input type="checkbox" id="f-micro"><span>전자레인지만</span></label>
+          <label class="pill"><input type="checkbox" id="f-quick"><span>10분 이내</span></label>
+        </fieldset>
+        <p class="pantry">기본 양념은 있다고 칠게요<br><span id="pantry"></span></p>
+      </aside>
+
+      <div class="results-wrap">
+        <p id="summary" class="summary" aria-live="polite"></p>
+        <div id="results" class="grid"></div>
+      </div>
     </div>
-
-    <p id="summary" class="summary" aria-live="polite"></p>
-    <div id="results" class="grid"></div>
   </section>
 
   <section id="basket" class="band">
     <div class="wrap block">
       <div class="block-head">
+        <p class="kicker">STEP 2</p>
         <h2>이번 주 장바구니</h2>
         <p>이 재료만 사면 몇 끼를 해결할 수 있는지, 배달로 시켰을 때와 비교해 봤어요.</p>
       </div>
@@ -69,28 +105,30 @@
 
   <section id="storage" class="wrap block">
     <div class="block-head">
-      <h2>재료 보관법</h2>
-      <p>사 둔 재료를 버리지 않으려면 보관이 반이에요.</p>
+      <p class="kicker">STEP 3</p>
+      <h2>남은 재료는 여기에</h2>
+      <p>사 둔 재료를 버리지 않으려면 보관이 반이에요. 칸별로 정리했어요.</p>
     </div>
-    <div id="store-list" class="store-list"></div>
+    <div id="store-list" class="fridge-inside"></div>
   </section>
 
-  <section id="about" class="band">
+  <section id="about" class="dark">
     <div class="wrap block about">
       <div>
+        <p class="kicker">ABOUT</p>
         <h2>왜 만들었나요?</h2>
         <p>1인 가구는 824만 가구로 역대 최대예요. 하지만 바쁜 생활과 요리의 번거로움 때문에
           배달·외식·편의점으로 끼니를 때우기 쉽고, 식재료는 소량으로 사기 어려워 다 못 쓰고 버리게 됩니다.</p>
         <p>그래서 예능 「냉장고를 부탁해」에서 착안해, <b>자취생 냉장고 속 재료만으로</b> 만드는 간단하고
           건강한 한 끼를 모았어요. 레시피는 팀원이 자취방에서 직접 만들어 보며 시간·재료비를 확인해 계속 고쳐 나가고 있어요.</p>
         <ul class="sdg">
-          <li><span>SDG 3</span> 건강과 웰빙 — 배달 대신 균형 잡힌 집밥</li>
-          <li><span>SDG 12</span> 책임 있는 소비 — 필요한 만큼 사고 남김없이</li>
+          <li><span>SDG 3</span>건강과 웰빙 — 배달 대신 균형 잡힌 집밥</li>
+          <li><span>SDG 12</span>책임 있는 소비 — 필요한 만큼 사고 남김없이</li>
         </ul>
       </div>
       <div class="about-side">
         <h3>만든 사람들</h3>
-        <p class="muted">백석대학교 2026-2 협업 리딩클래스 「냉장고야 부탁해」 팀</p>
+        <p class="dim">백석대학교 2026-2 협업 리딩클래스 「냉장고야 부탁해」 팀</p>
         <ul class="team" id="team">
           <li>팀원 이름 (역할)</li>
           <li>팀원 이름 (역할)</li>
@@ -107,9 +145,11 @@
   </section>
 </main>
 
-<footer class="wrap foot">
-  <p>가격 기준: <span id="price-date"></span>. 배달 가격은 비슷한 메뉴의 배달팁 포함 예상가입니다.</p>
-  <p>구매 링크는 검색 결과로 연결되며, 특정 판매처와 관계가 없습니다.</p>
+<footer class="foot">
+  <div class="wrap">
+    <p>가격 기준: <span id="price-date"></span>. 배달 가격은 비슷한 메뉴의 배달팁 포함 예상가입니다.</p>
+    <p>구매 링크는 검색 결과로 연결되며, 특정 판매처와 관계가 없습니다.</p>
+  </div>
 </footer>
 
 <dialog id="detail" aria-labelledby="d-title">

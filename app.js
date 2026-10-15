@@ -23,6 +23,21 @@
   $("#pantry").textContent = PANTRY.join(", ");
   $("#price-date").textContent = PRICE_DATE;
 
+  const ICON = {
+    clock: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+    close: `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`,
+  };
+  const emoRow = r => r.ing.map(([k]) => `<span>${INGREDIENTS[k].emoji}</span>`).join("");
+  const offPct = r => Math.round((1 - cost(r) / r.delivery.price) * 100);
+
+  // 히어로 숫자 — 모두 data.js 에서 계산
+  const avgCost = RECIPES.reduce((s, r) => s + cost(r), 0) / RECIPES.length;
+  const avgOff = Math.round(RECIPES.reduce((s, r) => s + offPct(r), 0) / RECIPES.length);
+  $("#stats").innerHTML = `
+    <div><dt>자취방 레시피</dt><dd>${RECIPES.length}개</dd></div>
+    <div><dt>평균 1인분 재료비</dt><dd>${won(avgCost)}</dd></div>
+    <div><dt>배달보다 평균</dt><dd class="save">${avgOff}% 절약</dd></div>`;
+
   const chips = $("#chips");
   chips.innerHTML = Object.entries(INGREDIENTS).map(([k, v]) =>
     `<button type="button" class="chip" data-k="${k}" aria-pressed="${picked.has(k)}"><span class="e">${v.emoji}</span>${esc(v.name)}</button>`
@@ -61,20 +76,21 @@
       : a.missing.length - b.missing.length || b.hits - a.hits || a.r.time - b.r.time);
 
     const readyN = none ? 0 : list.filter(x => x.missing.length === 0).length;
-    $("#summary").textContent = none
-      ? `전체 레시피 ${list.length}개 — 재료를 고르면 지금 만들 수 있는 것부터 보여 드려요.`
-      : `지금 바로 만들 수 있는 레시피 ${readyN}개 · 재료를 조금 더 사면 되는 레시피 ${list.length - readyN}개`;
+    $("#summary").innerHTML = none
+      ? `레시피 <b>${list.length}개</b> — 재료를 고르면 지금 만들 수 있는 것부터 보여 드려요.`
+      : `지금 바로 만들 수 있는 레시피 <b>${readyN}개</b> · 조금만 더 사면 되는 레시피 ${list.length - readyN}개`;
 
     $("#results").innerHTML = list.length ? list.map(({ r, missing }) => {
       const badge = none ? ""
         : missing.length === 0 ? `<span class="badge ok">지금 바로 가능</span>`
         : `<span class="badge ${missing.length <= 2 ? "need" : "far"}">${missing.map(k => INGREDIENTS[k].name).join(", ")} 필요</span>`;
       return `<button type="button" class="card" data-id="${r.id}">
-        ${badge}
-        <div class="emo" aria-hidden="true">${r.ing.map(([k]) => INGREDIENTS[k].emoji).join("")}</div>
-        <h3>${esc(r.name)}</h3>
-        <div class="meta"><span>⏱ ${r.time}분</span><span>${r.level}</span><span>${r.tool}</span></div>
-        <div class="price"><span>재료비</span><b>${won(cost(r))}</b><s>배달 ${won(r.delivery.price)}</s></div>
+        <div class="card-top"><span class="emos" aria-hidden="true">${emoRow(r)}</span>${badge}</div>
+        <div class="card-body">
+          <h3>${esc(r.name)}</h3>
+          <div class="meta"><span>${ICON.clock}${r.time}분</span><span>${r.level}</span><span>${r.tool}</span></div>
+          <div class="price"><span class="num">${won(cost(r))}</span><s>배달 ${won(r.delivery.price)}</s><span class="off">-${offPct(r)}%</span></div>
+        </div>
       </button>`;
     }).join("") : `<p class="empty">조건에 맞는 레시피가 없어요. 필터를 풀어 보세요.</p>`;
   }
@@ -90,57 +106,64 @@
     if (!r) return;
     const c = cost(r), d = r.delivery.price;
     $("#d-body").innerHTML = `
-      <div class="d-head">
-        <div><p class="eyebrow">${r.ing.map(([k]) => INGREDIENTS[k].emoji).join(" ")}</p><h2 id="d-title">${esc(r.name)}</h2></div>
-        <button type="button" class="close" aria-label="닫기">×</button>
+      <div class="d-hero">
+        <div><div class="emo" aria-hidden="true">${emoRow(r)}</div><h2 id="d-title">${esc(r.name)}</h2></div>
+        <button type="button" class="close" aria-label="닫기">${ICON.close}</button>
       </div>
-      <div class="facts">
-        <div><small>조리 시간</small><b>${r.time}분</b></div>
-        <div><small>난이도</small><b>${r.level}</b></div>
-        <div><small>도구</small><b>${r.tool}</b></div>
-        <div><small>1인분 재료비</small><b>${won(c)}</b></div>
-      </div>
-
-      <div class="d-sec">
-        <h3>재료 (1인분)</h3>
-        <ul class="ing">${r.ing.map(([k, amt]) => {
-          const v = INGREDIENTS[k];
-          return `<li><span>${v.emoji}</span><span class="nm">${esc(v.name)}</span><span class="amt">${esc(amt)}</span>
-            ${picked.has(k) ? `<span class="have">있음</span>` : ""}
-            <span class="buy" title="${esc(v.pack)} · 약 ${won(v.price)}">소포장 ${esc(v.pack)} ${buyLinks(k)}</span></li>`;
-        }).join("")}</ul>
-        <p class="sauce"><b>양념</b> ${esc(r.sauce)}</p>
-      </div>
-
-      <div class="d-sec">
-        <h3>만드는 법</h3>
-        <ol class="steps">${r.steps.map(s => `<li>${esc(s)}</li>`).join("")}</ol>
-      </div>
-
-      ${r.leftover.length ? `<div class="d-sec">
-        <h3>남은 재료 이어 쓰기</h3>
-        <div class="chain">${r.leftover.map(([k, what, next]) => byId[next] ? `
-          <button type="button" data-next="${next}">
-            <span>${INGREDIENTS[k].emoji} ${esc(what)} 남았다면</span><span class="arrow">→</span><b>${esc(byId[next].name)}</b>
-          </button>` : "").join("")}</div>
-      </div>` : ""}
-
-      <div class="d-sec d-cmp">
-        <h3>배달과 비교하면</h3>
-        <div class="cmp">
-          <div class="bar home"><span>집밥</span><div class="track"><div class="fill" style="width:${Math.max(4, c / d * 100)}%"></div></div><b>${won(c)}</b></div>
-          <div class="bar deli"><span>배달</span><div class="track"><div class="fill" style="width:100%"></div></div><b>${won(d)}</b></div>
+      <dl class="facts">
+        <div><dt>조리 시간</dt><dd>${r.time}분</dd></div>
+        <div><dt>난이도</dt><dd>${r.level}</dd></div>
+        <div><dt>도구</dt><dd>${r.tool}</dd></div>
+        <div><dt>1인분 재료비</dt><dd class="num">${won(c)}</dd></div>
+      </dl>
+      <div class="d-main">
+        <div class="d-sec">
+          <h3>재료 (1인분)</h3>
+          <ul class="ing">${r.ing.map(([k, amt]) => {
+            const v = INGREDIENTS[k];
+            return `<li><span class="e" aria-hidden="true">${v.emoji}</span><span class="nm">${esc(v.name)}</span><span class="amt">${esc(amt)}</span>
+              ${picked.has(k) ? `<span class="have">있음</span>` : ""}
+              <span class="buy"><span>소포장 ${esc(v.pack)}</span>${buyLinks(k)}</span></li>`;
+          }).join("")}</ul>
+          <p class="sauce"><b>양념</b>${esc(r.sauce)}</p>
         </div>
-        <p class="save" style="margin:8px 0 0">한 끼에 ${won(d - c)} 절약</p>
-        <p class="left" style="margin:2px 0 0">배달: ${esc(r.delivery.name)} (배달팁 포함 예상가)</p>
-      </div>
 
-      <div class="d-sec">
-        <h3>재료 보관 팁</h3>
-        <ul class="ing">${r.ing.map(([k]) => {
-          const v = INGREDIENTS[k];
-          return `<li><span>${v.emoji}</span><span class="nm">${esc(v.name)}</span><span class="amt">${esc(v.store)} (${esc(v.keep)})</span></li>`;
-        }).join("")}</ul>
+        <div class="d-sec">
+          <h3>만드는 법</h3>
+          <ol class="steps">${r.steps.map(s => `<li><span>${esc(s)}</span></li>`).join("")}</ol>
+        </div>
+
+        ${r.leftover.length ? `<div class="d-sec">
+          <h3>남은 재료 이어 쓰기</h3>
+          <div class="chain">${r.leftover.map(([k, what, next]) => byId[next] ? `
+            <button type="button" data-next="${next}">
+              <span>${INGREDIENTS[k].emoji} ${esc(what)} 남았다면</span><span class="arrow" aria-hidden="true">→</span><b>${esc(byId[next].name)}</b>
+            </button>` : "").join("")}</div>
+        </div>` : ""}
+
+        <div class="d-sec">
+          <h3>배달과 비교하면</h3>
+          <div class="receipt">
+            <div class="rc-sec">
+              <p class="rc-label">집밥 1인분</p>
+              ${r.ing.map(([k, amt, use]) => `<div class="rc-row"><span>${esc(INGREDIENTS[k].name)} ${esc(amt)}</span><span class="num">${won(INGREDIENTS[k].price * use)}</span></div>`).join("")}
+              <div class="rc-row rc-total"><span>합계</span><span class="num">${won(c)}</span></div>
+            </div>
+            <div class="rc-sec">
+              <div class="rc-row rc-total"><span>배달 · ${esc(r.delivery.name)}</span><span class="num">${won(d)}</span></div>
+              <p class="rc-left" style="margin-top:2px">배달팁 포함 예상가</p>
+            </div>
+            <div class="rc-sec rc-save"><span>한 끼에 아끼는 돈</span><b>${won(d - c)}</b></div>
+          </div>
+        </div>
+
+        <div class="d-sec">
+          <h3>재료 보관 팁</h3>
+          <ul class="ing tips">${r.ing.map(([k]) => {
+            const v = INGREDIENTS[k];
+            return `<li><span class="e" aria-hidden="true">${v.emoji}</span><span class="nm">${esc(v.name)}</span><span class="amt">${esc(v.store)} (${esc(v.keep)})</span></li>`;
+          }).join("")}</ul>
+        </div>
       </div>`;
     if (!dlg.open) dlg.showModal();
     dlg.scrollTop = 0; $("#d-body").scrollIntoView?.({ block: "start" });
@@ -182,31 +205,47 @@
     const deli = made.reduce((s, r) => s + r.delivery.price, 0);
     const left = items.filter(k => k !== "rice" && stock[k] > 0.05)
       .map(k => `${INGREDIENTS[k].name} ${Math.round(stock[k] * 100)}%`);
-    return { made, buy, deli, left };
+    return { made, buy, deli, left, riceUsed };
   }
 
   $("#baskets").innerHTML = BASKETS.map(b => {
     const p = planBasket(b.items);
     if (!p.made.length) return "";
-    const max = Math.max(p.buy, p.deli);
-    return `<article class="bk">
-      <h3>${esc(b.name)}</h3>
-      <div class="items">${b.items.map(k => INGREDIENTS[k].emoji + " " + esc(INGREDIENTS[k].name)).join(" · ")}</div>
-      <div><b>${p.made.length}끼</b> 해결
-        <ol>${p.made.map(r => `<li><a href="#recipe=${r.id}">${esc(r.name)}</a></li>`).join("")}</ol></div>
-      <div class="cmp">
-        <div class="bar home"><span>장보기</span><div class="track"><div class="fill" style="width:${p.buy / max * 100}%"></div></div><b>${won(p.buy)}</b></div>
-        <div class="bar deli"><span>배달 ${p.made.length}번</span><div class="track"><div class="fill" style="width:${p.deli / max * 100}%"></div></div><b>${won(p.deli)}</b></div>
+    return `<article class="receipt">
+      <div class="rc-head"><small>SHOPPING RECEIPT</small><h3>${esc(b.name)}</h3></div>
+      <div class="rc-sec">
+        <p class="rc-label">장보기</p>
+        ${b.items.filter(k => k !== "rice").map(k => `<div class="rc-row"><span>${INGREDIENTS[k].emoji} ${esc(INGREDIENTS[k].name)} ${esc(INGREDIENTS[k].pack)}</span><span class="num">${won(INGREDIENTS[k].price)}</span></div>`).join("")}
+        <div class="rc-row"><span>${INGREDIENTS.rice.emoji} 밥 ${p.riceUsed}공기</span><span class="num">${won(p.riceUsed * INGREDIENTS.rice.price)}</span></div>
+        <div class="rc-row rc-total"><span>합계</span><span class="num">${won(p.buy)}</span></div>
       </div>
-      <div class="save">${won(p.deli - p.buy)} 절약 · 한 끼 ${won(p.buy / p.made.length)}</div>
-      ${p.left.length ? `<div class="left">아직 남은 재료: ${p.left.join(", ")} — 다음 주에 이어서!</div>` : ""}
+      <div class="rc-sec">
+        <p class="rc-label">이걸로 만드는 ${p.made.length}끼</p>
+        ${p.made.map(r => `<div class="rc-row"><a href="#recipe=${r.id}">${esc(r.name)}</a><s class="num">${won(r.delivery.price)}</s></div>`).join("")}
+        <div class="rc-row rc-total"><span>배달로 시키면</span><span class="num">${won(p.deli)}</span></div>
+      </div>
+      <div class="rc-sec">
+        <div class="rc-save"><span>${p.made.length}끼에 아끼는 돈</span><b>${won(p.deli - p.buy)}</b></div>
+        <p class="rc-left">한 끼 ${won(p.buy / p.made.length)}${p.left.length ? ` · 남은 재료: ${p.left.join(", ")}` : ""}</p>
+      </div>
     </article>`;
   }).join("");
 
   /* ---------- 보관법 ---------- */
-  $("#store-list").innerHTML = Object.values(INGREDIENTS).map(v =>
-    `<div class="st"><h3><span>${v.emoji} ${esc(v.name)}</span><small>${esc(v.keep)}</small></h3><p>${esc(v.store)}</p></div>`
-  ).join("");
+  const zoneOf = v => /실온/.test(v.keep) ? "room" : /^냉동/.test(v.keep) ? "freeze" : "cold";
+  const ZONES = [
+    ["freeze", "냉동실", "-18°C", "한 번 쓸 만큼 나눠 얼려 두면 버릴 일이 없어요."],
+    ["cold", "냉장실", "0~5°C", "개봉한 재료는 밀폐해서, 기간 안에 이어 쓰기."],
+    ["room", "실온", "서늘한 곳", "빛이 들지 않는 서늘한 곳에 두세요."],
+  ];
+  $("#store-list").innerHTML = ZONES.map(([z, name, temp, desc]) => `
+    <div class="zone z-${z}">
+      <h3>${name} <small>${temp}</small></h3>
+      <p>${desc}</p>
+      <ul class="shelf">${Object.values(INGREDIENTS).filter(v => zoneOf(v) === z).map(v => `
+        <li><span class="e" aria-hidden="true">${v.emoji}</span>
+          <div><b><span>${esc(v.name)}</span><small>${esc(v.keep)}</small></b><p>${esc(v.store)}</p></div></li>`).join("")}</ul>
+    </div>`).join("");
 
   renderResults();
   fromHash();
