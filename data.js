@@ -2,11 +2,12 @@
  * 냉장고야 부탁해 — 데이터 파일
  * 레시피·재료를 추가하거나 고칠 때는 이 파일만 수정하면 됩니다.
  *
- * ⚠ 가격은 모두 "예시 추정값"입니다. 현장조사(편의점·마트·온라인 장보기) 후
- *   실제 가격으로 바꿔 주세요. 바꾼 날짜는 PRICE_DATE 에 적어 주세요.
+ * 재료 가격: 2026-10-17 마켓컬리 검색 결과의 정가(할인 전). 묶음 상품은 1개 값으로 나눔.
+ *   마트·편의점 현장조사 값으로 바꾸면 PRICE_DATE 도 같이 고쳐 주세요.
+ * 배달 가격(delivery.price)은 아직 추정값입니다. 배달앱에서 확인 후 교체하세요.
  */
 
-const PRICE_DATE = "2026년 10월 (예시 추정가 — 현장조사 후 교체)";
+const PRICE_DATE = "2026년 10월 17일 마켓컬리 정가(할인 전) 기준";
 
 // 집에 기본으로 있다고 보는 양념 (레시피 매칭에서 제외)
 const PANTRY = ["간장", "소금", "설탕", "식용유", "참기름", "고춧가루", "다진마늘", "후추", "마요네즈", "김가루"];
@@ -19,20 +20,20 @@ const PANTRY = ["간장", "소금", "설탕", "식용유", "참기름", "고춧�
  *  store  : 보관법,  keep: 보관 기간
  */
 const INGREDIENTS = {
-  tofu:       { name: "두부",     emoji: "🫘", pack: "1모 (300g)",        price: 2000, search: "두부 소포장",       store: "남은 두부는 밀폐용기에 물을 붓고 잠기게 담아 냉장. 물은 매일 갈아 주세요.", keep: "개봉 후 2~3일" },
-  egg:        { name: "계란",     emoji: "🥚", pack: "10구",              price: 3500, search: "계란 10구",         store: "뾰족한 쪽이 아래로 가게, 냉장고 문 쪽이 아닌 안쪽 칸에 보관.", keep: "냉장 3~4주" },
-  greenonion: { name: "대파",     emoji: "🌿", pack: "손질 대파 1봉",     price: 1500, search: "손질 대파 소포장",  store: "송송 썰어 지퍼백에 넣고 냉동하면 필요할 때 한 줌씩 바로 쓸 수 있어요.", keep: "냉동 1개월" },
-  kimchi:     { name: "김치",     emoji: "🌶️", pack: "500g",              price: 3500, search: "김치 500g",         store: "꺼낼 때마다 위를 꾹 눌러 공기가 닿지 않게. 시어지면 볶음·찌개용으로.", keep: "냉장 2~3주" },
-  tuna:       { name: "참치캔",   emoji: "🥫", pack: "1캔 (100g)",        price: 1800, search: "참치캔 100g",       store: "개봉 후에는 캔째 두지 말고 밀폐용기에 옮겨 냉장.", keep: "개봉 후 1~2일" },
-  rice:       { name: "밥",       emoji: "🍚", pack: "1공기 (쌀 기준)",   price: 500,  search: "쌀 소포장 1kg",     store: "한 번에 지어서 1공기씩 랩으로 싸 냉동. 전자레인지 2분이면 갓 지은 밥.", keep: "냉동 1개월" },
-  cabbage:    { name: "양배추",   emoji: "🥬", pack: "1/4통",             price: 1500, search: "양배추 1/4",        store: "심을 도려내고 젖은 키친타월을 채운 뒤 랩으로 감싸 냉장.", keep: "냉장 1~2주" },
-  ham:        { name: "스팸(햄)", emoji: "🥓", pack: "1캔 (200g)",        price: 4500, search: "스팸 200g",         store: "개봉 후 남은 건 한 번 쓸 만큼 썰어 랩에 싸서 냉동.", keep: "냉장 2~3일 / 냉동 1개월" },
-  zucchini:   { name: "애호박",   emoji: "🥒", pack: "1개",               price: 1500, search: "애호박",            store: "자른 면을 랩으로 감싸 냉장. 물기가 생기면 빨리 써야 해요.", keep: "냉장 3~4일" },
-  onion:      { name: "양파",     emoji: "🧅", pack: "1개 (낱개)",        price: 700,  search: "양파 낱개",         store: "통양파는 서늘한 실온, 자른 양파는 랩에 싸서 냉장.", keep: "자른 것 냉장 3~4일" },
-  sprout:     { name: "콩나물",   emoji: "🌱", pack: "1봉 (300g)",        price: 1500, search: "콩나물 300g",       store: "밀폐용기에 물을 붓고 잠기게 담아 냉장하면 덜 무릅니다.", keep: "냉장 2~3일" },
-  potato:     { name: "감자",     emoji: "🥔", pack: "1개 (낱개)",        price: 700,  search: "감자 낱개",         store: "빛이 들지 않는 서늘한 실온. 싹이 나면 그 부분은 크게 도려내세요.", keep: "실온 2~3주" },
-  mushroom:   { name: "팽이버섯", emoji: "🍄", pack: "1봉 (150g)",        price: 900,  search: "팽이버섯",          store: "밑동을 자르지 말고 봉지째 냉장.", keep: "냉장 5~7일" },
-  doenjang:   { name: "된장",     emoji: "🟤", pack: "500g",              price: 3000, search: "된장 소용량",       store: "표면을 랩으로 덮고 냉장.", keep: "냉장 6개월 이상" },
+  tofu:       { name: "두부",     emoji: "🫘", pack: "1모 (300g)",        price: 2200, search: "두부 소포장",       store: "남은 두부는 밀폐용기에 물을 붓고 잠기게 담아 냉장. 물은 매일 갈아 주세요.", keep: "개봉 후 2~3일" },
+  egg:        { name: "계란",     emoji: "🥚", pack: "10구 (대란)",              price: 4180, search: "계란 10구",         store: "뾰족한 쪽이 아래로 가게, 냉장고 문 쪽이 아닌 안쪽 칸에 보관.", keep: "냉장 3~4주" },
+  greenonion: { name: "대파",     emoji: "🌿", pack: "손질 대파 100g",     price: 2090, search: "손질 대파 소포장",  store: "송송 썰어 지퍼백에 넣고 냉동하면 필요할 때 한 줌씩 바로 쓸 수 있어요.", keep: "냉동 1개월" },
+  kimchi:     { name: "김치",     emoji: "🌶️", pack: "썰은김치 500g",              price: 6980, search: "김치 500g",         store: "꺼낼 때마다 위를 꾹 눌러 공기가 닿지 않게. 시어지면 볶음·찌개용으로.", keep: "냉장 2~3주" },
+  tuna:       { name: "참치캔",   emoji: "🥫", pack: "1캔 (100g)",        price: 2480, search: "참치캔 100g",       store: "개봉 후에는 캔째 두지 말고 밀폐용기에 옮겨 냉장.", keep: "개봉 후 1~2일" },
+  rice:       { name: "밥",       emoji: "🍚", pack: "1공기 (쌀 1.5kg 10,900원 ÷ 15공기)",   price: 730,  search: "쌀 소포장 1kg",     store: "한 번에 지어서 1공기씩 랩으로 싸 냉동. 전자레인지 2분이면 갓 지은 밥.", keep: "냉동 1개월" },
+  cabbage:    { name: "양배추",   emoji: "🥬", pack: "1/4통",             price: 2490, search: "양배추 1/4",        store: "심을 도려내고 젖은 키친타월을 채운 뒤 랩으로 감싸 냉장.", keep: "냉장 1~2주" },
+  ham:        { name: "스팸(햄)", emoji: "🥓", pack: "1캔 (200g, 3캔 12,480원 묶음 기준)",        price: 4160, search: "스팸 200g",         store: "개봉 후 남은 건 한 번 쓸 만큼 썰어 랩에 싸서 냉동.", keep: "냉장 2~3일 / 냉동 1개월" },
+  zucchini:   { name: "애호박",   emoji: "🥒", pack: "1개",               price: 1990, search: "애호박",            store: "자른 면을 랩으로 감싸 냉장. 물기가 생기면 빨리 써야 해요.", keep: "냉장 3~4일" },
+  onion:      { name: "양파",     emoji: "🧅", pack: "1개 (1.5kg 4,990원 망 기준)",        price: 670,  search: "양파 낱개",         store: "통양파는 서늘한 실온, 자른 양파는 랩에 싸서 냉장.", keep: "자른 것 냉장 3~4일" },
+  sprout:     { name: "콩나물",   emoji: "🌱", pack: "1봉 (300g)",        price: 1590, search: "콩나물 300g",       store: "밀폐용기에 물을 붓고 잠기게 담아 냉장하면 덜 무릅니다.", keep: "냉장 2~3일" },
+  potato:     { name: "감자",     emoji: "🥔", pack: "1개 (1kg 4,990원 봉 기준)",        price: 1000,  search: "감자 낱개",         store: "빛이 들지 않는 서늘한 실온. 싹이 나면 그 부분은 크게 도려내세요.", keep: "실온 2~3주" },
+  mushroom:   { name: "팽이버섯", emoji: "🍄", pack: "1봉 (2봉 1,990원 묶음 기준)",        price: 1000,  search: "팽이버섯",          store: "밑동을 자르지 말고 봉지째 냉장.", keep: "냉장 5~7일" },
+  doenjang:   { name: "된장",     emoji: "🟤", pack: "500g",              price: 5380, search: "된장 소용량",       store: "표면을 랩으로 덮고 냉장.", keep: "냉장 6개월 이상" },
 };
 
 /*
