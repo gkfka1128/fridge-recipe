@@ -4,6 +4,15 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const byId = Object.fromEntries(RECIPES.map(r => [r.id, r]));
 
+  // 판매처별 가격 중 가장 싼 값을 price, 그 판매처를 src 로
+  for (const v of Object.values(INGREDIENTS)) {
+    if (!v.prices) continue;
+    [v.src, v.price] = Object.entries(v.prices).sort((x, y) => x[1] - y[1])[0];
+  }
+  const priceList = v => v.prices
+    ? Object.entries(v.prices).map(([s, p]) => s === v.src ? `<b>${esc(s)} ${won(p)}</b>` : `${esc(s)} ${won(p)}`).join(" · ")
+    : won(v.price);
+
   // 레시피 1인분 재료비 = Σ (재료 단위 가격 × 사용 비율)
   const cost = r => r.ing.reduce((s, [k, , use]) => s + INGREDIENTS[k].price * use, 0);
 
@@ -123,7 +132,7 @@
             const v = INGREDIENTS[k];
             return `<li><span class="e" aria-hidden="true">${v.emoji}</span><span class="nm">${esc(v.name)}</span><span class="amt">${esc(amt)}</span>
               ${picked.has(k) ? `<span class="have">있음</span>` : ""}
-              <span class="buy"><span>소포장 ${esc(v.pack)}</span>${buyLinks(k)}</span></li>`;
+              <span class="buy"><span>${esc(v.pack)} · ${priceList(v)}</span>${buyLinks(k)}</span></li>`;
           }).join("")}</ul>
           <p class="sauce"><b>양념</b>${esc(r.sauce)}</p>
         </div>
@@ -215,7 +224,7 @@
       <div class="rc-head"><small>SHOPPING RECEIPT</small><h3>${esc(b.name)}</h3></div>
       <div class="rc-sec">
         <p class="rc-label">장보기</p>
-        ${b.items.filter(k => k !== "rice").map(k => `<div class="rc-row"><span>${INGREDIENTS[k].emoji} ${esc(INGREDIENTS[k].name)} ${esc(INGREDIENTS[k].pack)}</span><span class="num">${won(INGREDIENTS[k].price)}</span></div>`).join("")}
+        ${b.items.filter(k => k !== "rice").map(k => `<div class="rc-row"><span>${INGREDIENTS[k].emoji} ${esc(INGREDIENTS[k].name)} ${esc(INGREDIENTS[k].pack)}${INGREDIENTS[k].src ? ` <small class="src">${esc(INGREDIENTS[k].src)}</small>` : ""}</span><span class="num">${won(INGREDIENTS[k].price)}</span></div>`).join("")}
         <div class="rc-row"><span>${INGREDIENTS.rice.emoji} 밥 ${p.riceUsed}공기</span><span class="num">${won(p.riceUsed * INGREDIENTS.rice.price)}</span></div>
         <div class="rc-row rc-total"><span>합계</span><span class="num">${won(p.buy)}</span></div>
       </div>
