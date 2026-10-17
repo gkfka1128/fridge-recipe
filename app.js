@@ -9,6 +9,9 @@
     if (!v.prices) continue;
     [v.src, v.price] = Object.entries(v.prices).sort((x, y) => x[1] - y[1])[0];
   }
+  // 배달 가격 = 식당 메뉴 평균 + 배달팁
+  for (const r of RECIPES) if (r.delivery.menu) r.delivery.price = r.delivery.menu + DELIVERY_TIP;
+
   const priceList = v => v.prices
     ? Object.entries(v.prices).map(([s, p]) => s === v.src ? `<b>${esc(s)} ${won(p)}</b>` : `${esc(s)} ${won(p)}`).join(" · ")
     : won(v.price);
@@ -160,7 +163,9 @@
             </div>
             <div class="rc-sec">
               <div class="rc-row rc-total"><span>배달 · ${esc(r.delivery.name)}</span><span class="num">${won(d)}</span></div>
-              <p class="rc-left" style="margin-top:2px">배달팁 포함 예상가</p>
+              <p class="rc-left" style="margin-top:2px">${r.delivery.menu
+                ? `메뉴 ${won(r.delivery.menu)} (백석대 근처 식당 ${r.delivery.stores}곳 평균) + 배달팁 ${won(DELIVERY_TIP)}`
+                : "근처에 같은 메뉴가 없어 추정한 가격 (배달팁 포함)"}</p>
             </div>
             <div class="rc-sec rc-save"><span>한 끼에 아끼는 돈</span><b>${won(d - c)}</b></div>
           </div>
