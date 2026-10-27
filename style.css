@@ -60,7 +60,8 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 400; }
 .stats div { background: var(--door); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
 .stats dt { font-size: 13px; color: var(--muted); }
 .stats dd { margin: 2px 0 0; font: 28px/1.1 var(--display); }
-.stats dd.save { color: var(--tomato-ink); }
+.stats dd.save { color: var(--mint-ink); }
+.stats small { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
 
 /* 냉장고 일러스트 (CSS로만) */
 .fridge { justify-self: center; width: min(340px, 100%); aspect-ratio: 34 / 50; display: grid; grid-template-rows: 32fr 68fr; gap: 6px;
@@ -147,8 +148,8 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 400; }
 .meta svg { width: 13px; height: 13px; }
 .price { margin-top: auto; padding-top: 12px; border-top: 1.5px dashed var(--line); display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .price .num { font-size: 20px; }
-.price s { font-size: 13px; color: var(--muted); }
-.price .off { margin-left: auto; font: 600 13px/1 var(--mono); color: #fff; background: var(--tomato-ink); border-radius: 6px; padding: 4px 6px; }
+.price small { font-size: 13px; color: var(--muted); }
+.price .num { margin-left: auto; }
 .badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; line-height: 1.4; }
 .badge.ok { background: var(--mint-ink); color: #fff; }
 .badge.need { background: var(--butter); color: var(--ink); }
@@ -156,7 +157,26 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 400; }
 .empty { grid-column: 1 / -1; text-align: center; color: var(--muted); padding: 48px 0; background: var(--door); border-radius: var(--r); border: 1.5px dashed var(--line); }
 
 /* ---------- 영수증 (장바구니 · 상세 비교) ---------- */
-.baskets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; align-items: start; }
+.planner { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
+.pick-panel { display: flex; flex-direction: column; gap: 16px; }
+.presets { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.presets::before { content: "추천 장바구니"; font-size: 13px; font-weight: 700; color: var(--muted); margin-right: 4px; }
+.pill-btn { font: inherit; font-size: 14px; font-weight: 700; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--ink); background: var(--door); color: var(--ink); cursor: pointer; }
+.pill-btn:hover { background: var(--butter-soft); }
+.pick-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.pick { font: inherit; display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px 8px 10px; text-align: left; border-radius: 14px; border: 1.5px solid var(--line); background: var(--door); color: var(--ink); cursor: pointer; }
+.pick:hover { border-color: var(--ink); }
+.pick .emos span { width: 30px; height: 30px; font-size: 15px; margin-left: -8px; }
+.pick .emos span:first-child { margin-left: 0; }
+.pick .emos span:nth-child(n+4) { display: none; }
+.pick .nm { flex: 1; font-weight: 700; font-size: 15px; line-height: 1.3; }
+.pick .num { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.pick[aria-pressed="true"] { background: var(--mint); border-color: var(--mint-ink); box-shadow: 0 3px 0 var(--mint-ink); }
+.pick[aria-pressed="true"] .num { color: var(--mint-ink); }
+#my-basket { position: sticky; top: 82px; }
+.rc-empty { color: var(--muted); text-align: center; padding: 24px 0 8px; margin: 0; }
+.extra { display: flex; flex-wrap: wrap; gap: 6px; }
+.extra .pill-btn { min-height: 34px; padding: 0 12px; font-size: 13px; border-width: 1.5px; }
 .receipt {
   --zig: radial-gradient(circle at 8px 0, transparent 7px, var(--receipt) 7.5px) 0 0 / 16px 100%;
   position: relative; background: var(--receipt); padding: 26px 22px 30px; font-size: 14px;
@@ -209,9 +229,6 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 400; }
 .about b { color: #fff; }
 .about-side { background: rgba(255, 255, 255, .06); border-radius: 22px; padding: 24px; }
 .dim { color: #a9bab4; margin-top: 0; }
-.sdg { list-style: none; padding: 0; margin: 24px 0 0; display: grid; gap: 10px; }
-.sdg li { display: flex; align-items: center; gap: 10px; }
-.sdg span { font: 700 12px/1 var(--mono); background: var(--butter); color: var(--ink); border-radius: 6px; padding: 6px 8px; white-space: nowrap; }
 .team, .refs { padding-left: 1.2em; margin: 0 0 22px; }
 .refs { font-size: 14px; color: #a9bab4; }
 .foot { padding-block: 24px 40px; font-size: 13px; color: #a9bab4; background: var(--ink); border-top: 1px solid rgba(255,255,255,.1); }
@@ -272,6 +289,8 @@ dialog::backdrop { background: rgba(23, 40, 42, .55); }
   .fridge { width: min(280px, 80%); }
   .finder { grid-template-columns: 1fr; }
   .panel { position: static; }
+  .planner { grid-template-columns: 1fr; }
+  #my-basket { position: static; }
   .fridge-inside { grid-template-columns: 1fr; grid-template-areas: "freeze" "cold" "room"; }
   .z-cold .shelf { grid-template-columns: 1fr; }
   .z-cold .shelf li:nth-child(2) { border-top: 1px solid var(--line); padding-top: 12px; }

@@ -6,13 +6,16 @@
  *   묶음 상품은 1개 값으로 나눔 — 예) 쌀 2kg 9,290원 ÷ 20공기, 양파 1.5kg 3,180원 ÷ 7.5개,
  *   감자 1kg 2,400원 ÷ 5개, 스팸 3캔 11,930원 ÷ 3.
  *   다른 판매처(네이버, 동네 마트 등)를 조사했다면 prices 에 { 마트: 1500 } 처럼 추가하면 됩니다.
- * 배달 가격: 근처 식당 메뉴판 가격 + 배달팁(DELIVERY_TIP). 아래 레시피 설명 참고.
+ * 배달 가격: 메뉴별로 비교하지 않고 '배달 한 끼 평균' 하나와 비교합니다 (아래 DELIVERY).
  */
 
 const PRICE_DATE = "2026년 10월 17일 마켓컬리·쿠팡 중 싼 값 기준";
 
-// 배달팁 (1건 기준) — 요즘 배달앱 평균 3,000원 (팀 확인, 2026-10)
-const DELIVERY_TIP = 3000;
+// 배달 한 끼 평균 = 근처 식당 1인 메뉴 평균 + 배달팁
+//  menu : 백석대 근처(안서동·신부동) 식당 메뉴판의 1인 메뉴 14종 평균 8,171원 → 8,200원 (카카오맵, 2026-10-17)
+//  tip  : 요즘 배달앱 배달팁 평균 3,000원 (팀 확인)
+//  조사 원자료: ../조사/배달가격_조사.md
+const DELIVERY = { menu: 8200, tip: 3000, kinds: 14 };
 
 // 집에 기본으로 있다고 보는 양념 (레시피 매칭에서 제외)
 const PANTRY = ["간장", "소금", "설탕", "식용유", "참기름", "고춧가루", "다진마늘", "후추", "마요네즈", "김가루", "고추장"];
@@ -45,11 +48,6 @@ const INGREDIENTS = {
  * 레시피
  *  ing      : [재료키, 사용량 표시, 사용 비율(pack 대비)]
  *  leftover : 만들고 남는 재료 → 이어서 만들 레시피 id
- *  delivery : 비슷한 메뉴를 배달시켰을 때 가격
- *     menu   = 백석대 근처(안서동·신부동) 식당 메뉴판 가격 평균 (카카오맵, 2026-10-17 조회)
- *     stores = 평균 낸 식당 수.  배달 가격 = menu + DELIVERY_TIP
- *     est: true 인 것은 근처에 같은 메뉴가 없어 아직 추정값 (price 에 배달팁 포함 가격)
- *     조사 원자료: ../조사/배달가격_조사.md
  */
 const RECIPES = [
   {
@@ -63,7 +61,6 @@ const RECIPES = [
       "대파를 올리고 1분 더 졸이면 완성.",
     ],
     leftover: [["tofu", "두부 1/2모", "tofu-egg-soup"]],
-    delivery: { name: "두부조림 도시락·백반", menu: 7900, stores: 2 },
   },
   {
     id: "tofu-egg-soup", name: "두부 계란국", time: 10, level: "쉬움", tool: "인덕션",
@@ -76,7 +73,6 @@ const RECIPES = [
       "대파를 넣고 소금으로 간을 맞추면 완성.",
     ],
     leftover: [["egg", "계란", "egg-steam"]],
-    delivery: { name: "국 정식 (계란순두부·미역국)", menu: 8700, stores: 3 },
   },
   {
     id: "egg-steam", name: "전자레인지 계란찜", time: 5, level: "아주 쉬움", tool: "전자레인지",
@@ -89,7 +85,6 @@ const RECIPES = [
       "참기름을 두르면 완성.",
     ],
     leftover: [["greenonion", "대파", "sprout-soup"]],
-    delivery: { name: "계란찜 (사이드)", price: 6000, est: true },
   },
   {
     id: "tuna-kimchi-rice", name: "참치김치볶음밥", time: 12, level: "쉬움", tool: "인덕션",
@@ -102,7 +97,6 @@ const RECIPES = [
       "옆에서 계란 프라이를 해 올리고 참기름·김가루로 마무리.",
     ],
     leftover: [["tuna", "참치 1/2캔", "tuna-mayo-bowl"], ["kimchi", "김치", "kimchi-ham-stew"]],
-    delivery: { name: "김치볶음밥", menu: 6300, stores: 5 },
   },
   {
     id: "tuna-mayo-bowl", name: "참치마요덮밥", time: 8, level: "아주 쉬움", tool: "전자레인지",
@@ -115,7 +109,6 @@ const RECIPES = [
       "김가루를 듬뿍 뿌리면 완성.",
     ],
     leftover: [["onion", "양파 3/4개", "potato-stirfry"]],
-    delivery: { name: "참치마요덮밥", menu: 6200, stores: 4 },
   },
   {
     id: "kimchi-ham-stew", name: "김치 햄 찌개", time: 15, level: "쉬움", tool: "인덕션",
@@ -128,7 +121,6 @@ const RECIPES = [
       "싱거우면 김치 국물이나 소금으로 간을 맞춰요.",
     ],
     leftover: [["ham", "스팸 2/3캔", "cabbage-ham-bowl"], ["tofu", "두부 1/2모", "tofu-braise"]],
-    delivery: { name: "김치찌개 1인분", menu: 10000, stores: 6 },
   },
   {
     id: "cabbage-ham-bowl", name: "양배추 햄 덮밥", time: 12, level: "쉬움", tool: "인덕션",
@@ -141,7 +133,6 @@ const RECIPES = [
       "계란 프라이를 올리면 완성.",
     ],
     leftover: [["cabbage", "양배추 1/8통", "cabbage-pancake"], ["ham", "스팸 1/3캔", "kimchi-ham-stew"]],
-    delivery: { name: "스팸 덮밥", menu: 6800, stores: 3 },
   },
   {
     id: "cabbage-pancake", name: "양배추 계란부침", time: 12, level: "보통", tool: "인덕션",
@@ -154,7 +145,6 @@ const RECIPES = [
       "마요네즈를 지그재그로 뿌리면 오코노미야키 느낌.",
     ],
     leftover: [],
-    delivery: { name: "오코노미야키", menu: 7500, stores: 1 },
   },
   {
     id: "zucchini-stirfry", name: "애호박 볶음 덮밥", time: 10, level: "쉬움", tool: "인덕션",
@@ -167,7 +157,6 @@ const RECIPES = [
       "밥 위에 올리고 참기름을 두르면 완성.",
     ],
     leftover: [["zucchini", "애호박 1/2개", "zucchini-doenjang"]],
-    delivery: { name: "덮밥 (제육덮밥 기준)", menu: 7600, stores: 3 },
   },
   {
     id: "zucchini-doenjang", name: "애호박 된장찌개", time: 15, level: "쉬움", tool: "인덕션",
@@ -180,7 +169,6 @@ const RECIPES = [
       "고춧가루를 살짝 넣으면 칼칼해져요.",
     ],
     leftover: [["tofu", "두부 1/2모", "tofu-braise"]],
-    delivery: { name: "된장찌개 1인분", menu: 9300, stores: 5 },
   },
   {
     id: "sprout-soup", name: "콩나물국", time: 10, level: "아주 쉬움", tool: "인덕션",
@@ -193,7 +181,6 @@ const RECIPES = [
       "대파를 넣고 1분 더 끓이면 완성.",
     ],
     leftover: [["sprout", "콩나물 1/2봉", "sprout-rice"]],
-    delivery: { name: "콩나물국밥", menu: 7700, stores: 3 },
   },
   {
     id: "sprout-rice", name: "전자레인지 콩나물밥", time: 8, level: "아주 쉬움", tool: "전자레인지",
@@ -206,7 +193,6 @@ const RECIPES = [
       "양념장을 넣고 비비면 완성.",
     ],
     leftover: [],
-    delivery: { name: "콩나물비빔밥", menu: 8500, stores: 2 },
   },
   {
     id: "potato-stirfry", name: "감자 양파 볶음", time: 15, level: "보통", tool: "인덕션",
@@ -219,7 +205,6 @@ const RECIPES = [
       "소금·후추로 간하고 참기름으로 마무리. 반찬이나 밥 위에.",
     ],
     leftover: [["onion", "양파 1/2개", "zucchini-stirfry"]],
-    delivery: { name: "감자볶음 반찬", price: 7000, est: true },
   },
   {
     id: "enoki-egg-rice", name: "팽이버섯 간장 계란밥", time: 10, level: "쉬움", tool: "인덕션",
@@ -232,7 +217,6 @@ const RECIPES = [
       "밥 위에 버섯·계란을 올리고 참기름을 두르면 완성.",
     ],
     leftover: [],
-    delivery: { name: "덮밥 (제육덮밥 기준)", menu: 7600, stores: 3 },
   },
   // ---- 팀원 조사 레시피 (2026-10-20 추가) ----
   {
@@ -246,7 +230,6 @@ const RECIPES = [
       "한쪽을 2~3분 익히고 뒤집어 반대쪽도 익혀요. 가운데까지 다 익으면 완성.",
     ],
     leftover: [["tofu", "두부 1/2모", "tofu-braise"], ["tuna", "참치 1/2캔", "tuna-mayo-bowl"]],
-    delivery: { name: "두부부침", menu: 10000, stores: 1 },
   },
   {
     id: "sprout-salad", name: "콩나물 무침", time: 10, level: "쉬움", tool: "인덕션",
@@ -259,7 +242,6 @@ const RECIPES = [
       "한김 식으면 대파, 다진마늘, 소금, 참기름, 고춧가루를 넣고 무쳐요. 간을 보며 소금을 조금씩 더해요.",
     ],
     leftover: [["sprout", "콩나물 100g", "sprout-soup"]],
-    delivery: { name: "콩나물무침 반찬", price: 7000, est: true },
   },
   {
     id: "potato-braise", name: "감자조림", time: 15, level: "쉬움", tool: "인덕션",
@@ -272,7 +254,6 @@ const RECIPES = [
       "젓가락이 부드럽게 들어가고 양념이 자작하게 남으면 대파와 참기름을 넣고 섞어 완성.",
     ],
     leftover: [["onion", "양파 3/4개", "potato-stirfry"]],
-    delivery: { name: "감자조림 반찬", price: 7000, est: true },
   },
   {
     id: "spam-egg-rice", name: "계란 스팸 볶음밥", time: 10, level: "쉬움", tool: "인덕션",
@@ -286,7 +267,6 @@ const RECIPES = [
       "맛을 보고 간장을 조금 더하고, 후추를 뿌리면 완성.",
     ],
     leftover: [["ham", "스팸 1/2캔", "spam-potato-jjageuli"]],
-    delivery: { name: "스팸·햄 볶음밥", menu: 7500, stores: 2 },
   },
   {
     id: "spam-potato-jjageuli", name: "스팸 감자 짜글이", time: 15, level: "쉬움", tool: "인덕션",
@@ -299,7 +279,6 @@ const RECIPES = [
       "감자가 부드럽게 익으면 대파를 넣고 1~2분 더 끓여 완성.",
     ],
     leftover: [["ham", "스팸 1/2캔", "spam-egg-rice"]],
-    delivery: { name: "스팸 김치찌개 1인분", menu: 10400, stores: 3 },
   },
   {
     id: "tofu-kimchi", name: "두부 김치", time: 15, level: "쉬움", tool: "인덕션",
@@ -311,13 +290,12 @@ const RECIPES = [
       "간이 부족하면 간장을 조금 넣고, 마지막에 참기름을 둘러요. 접시에 두부와 볶음김치를 담으면 완성.",
     ],
     leftover: [["kimchi", "김치 400g", "kimchi-ham-stew"]],
-    delivery: { name: "두부김치", price: 13000, est: true },
   },
 ];
 
-// "이번 주 장바구니" 예시 — 이 재료만 사면 몇 끼를 만들 수 있는지 보여줍니다.
+// 추천 장바구니 — '이번 주 장바구니'에서 버튼으로 불러오는 메뉴 묶음 (레시피 id)
 const BASKETS = [
-  { name: "첫 자취 기본 장바구니", items: ["tofu", "egg", "greenonion", "kimchi", "tuna", "rice"] },
-  { name: "야채 듬뿍 장바구니",   items: ["zucchini", "onion", "potato", "tofu", "doenjang", "greenonion", "rice"] },
-  { name: "햄·양배추 장바구니",   items: ["ham", "cabbage", "egg", "kimchi", "tofu", "onion", "greenonion", "rice"] },
+  { name: "첫 자취 기본", recipes: ["tuna-kimchi-rice", "tofu-egg-soup", "tofu-braise", "egg-steam"] },
+  { name: "야채 듬뿍",   recipes: ["zucchini-doenjang", "zucchini-stirfry", "tofu-braise", "potato-stirfry"] },
+  { name: "햄·양배추",   recipes: ["spam-egg-rice", "kimchi-ham-stew", "tofu-egg-soup", "egg-steam", "cabbage-pancake"] },
 ];

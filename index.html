@@ -97,9 +97,15 @@
       <div class="block-head">
         <p class="kicker">STEP 2</p>
         <h2>이번 주 장바구니</h2>
-        <p>이 재료만 사면 몇 끼를 해결할 수 있는지, 배달로 시켰을 때와 비교해 봤어요.</p>
+        <p>이번 주에 만들 메뉴를 고르면 살 재료와 비용을 계산해 드려요. 추천 장바구니에서 시작해도 돼요.</p>
       </div>
-      <div id="baskets" class="baskets"></div>
+      <div class="planner">
+        <div class="pick-panel">
+          <div class="presets" id="presets" role="group" aria-label="추천 장바구니"></div>
+          <div class="pick-list" id="pick-list" role="group" aria-label="이번 주 메뉴 고르기"></div>
+        </div>
+        <div id="my-basket" aria-live="polite"></div>
+      </div>
     </div>
   </section>
 
@@ -121,10 +127,6 @@
           배달·외식·편의점으로 끼니를 때우기 쉽고, 식재료는 소량으로 사기 어려워 다 못 쓰고 버리게 됩니다.</p>
         <p>그래서 예능 「냉장고를 부탁해」에서 착안해, <b>자취생 냉장고 속 재료만으로</b> 만드는 간단하고
           건강한 한 끼를 모았어요. 레시피는 팀원이 자취방에서 직접 만들어 보며 시간·재료비를 확인해 계속 고쳐 나가고 있어요.</p>
-        <ul class="sdg">
-          <li><span>SDG 3</span>건강과 웰빙 — 배달 대신 균형 잡힌 집밥</li>
-          <li><span>SDG 12</span>책임 있는 소비 — 필요한 만큼 사고 남김없이</li>
-        </ul>
       </div>
       <div class="about-side">
         <h3>만든 사람들</h3>
@@ -147,7 +149,7 @@
 
 <footer class="foot">
   <div class="wrap">
-    <p>가격 기준: <span id="price-date"></span>. 배달 가격은 백석대 근처 식당 메뉴판 가격(카카오맵) 평균에 배달팁 3,000원을 더한 값입니다.</p>
+    <p>가격 기준: <span id="price-date"></span>. 배달 한 끼 평균은 백석대 근처 식당 1인 메뉴 14종 평균(카카오맵)에 배달팁 3,000원을 더한 값입니다.</p>
     <p>구매 링크는 검색 결과로 연결되며, 특정 판매처와 관계가 없습니다.</p>
   </div>
 </footer>

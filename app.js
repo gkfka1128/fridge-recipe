@@ -9,8 +9,8 @@
     if (!v.prices) continue;
     [v.src, v.price] = Object.entries(v.prices).sort((x, y) => x[1] - y[1])[0];
   }
-  // 배달 가격 = 식당 메뉴 평균 + 배달팁
-  for (const r of RECIPES) if (r.delivery.menu) r.delivery.price = r.delivery.menu + DELIVERY_TIP;
+  // 배달 한 끼 평균 (메뉴별 비교는 하지 않는다)
+  const DELI = DELIVERY.menu + DELIVERY.tip;
 
   const priceList = v => v.prices
     ? Object.entries(v.prices).map(([s, p]) => s === v.src ? `<b>${esc(s)} ${won(p)}</b>` : `${esc(s)} ${won(p)}`).join(" · ")
@@ -40,15 +40,13 @@
     close: `<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`,
   };
   const emoRow = r => r.ing.map(([k]) => `<span>${INGREDIENTS[k].emoji}</span>`).join("");
-  const offPct = r => Math.round((1 - cost(r) / r.delivery.price) * 100);
 
   // 히어로 숫자 — 모두 data.js 에서 계산
   const avgCost = RECIPES.reduce((s, r) => s + cost(r), 0) / RECIPES.length;
-  const avgOff = Math.round(RECIPES.reduce((s, r) => s + offPct(r), 0) / RECIPES.length);
   $("#stats").innerHTML = `
     <div><dt>자취방 레시피</dt><dd>${RECIPES.length}개</dd></div>
-    <div><dt>평균 1인분 재료비</dt><dd>${won(avgCost)}</dd></div>
-    <div><dt>배달보다 평균</dt><dd class="save">${avgOff}% 절약</dd></div>`;
+    <div><dt>평균 1인분 재료비</dt><dd class="save">${won(avgCost)}</dd></div>
+    <div><dt>배달 한 끼 평균</dt><dd>${won(DELI)}</dd><small>두 끼로 나눠 먹으면 ${won(DELI / 2)}</small></div>`;
 
   const chips = $("#chips");
   chips.innerHTML = Object.entries(INGREDIENTS).map(([k, v]) =>
@@ -101,7 +99,7 @@
         <div class="card-body">
           <h3>${esc(r.name)}</h3>
           <div class="meta"><span>${ICON.clock}${r.time}분</span><span>${r.level}</span><span>${r.tool}</span></div>
-          <div class="price"><span class="num">${won(cost(r))}</span><s>배달 ${won(r.delivery.price)}</s><span class="off">-${offPct(r)}%</span></div>
+          <div class="price"><small>1인분 재료비</small><span class="num">${won(cost(r))}</span></div>
         </div>
       </button>`;
     }).join("") : `<p class="empty">조건에 맞는 레시피가 없어요. 필터를 풀어 보세요.</p>`;
@@ -116,7 +114,7 @@
   function openRecipe(id, fromHash) {
     const r = byId[id];
     if (!r) return;
-    const c = cost(r), d = r.delivery.price;
+    const c = cost(r);
     $("#d-body").innerHTML = `
       <div class="d-hero">
         <div><div class="emo" aria-hidden="true">${emoRow(r)}</div><h2 id="d-title">${esc(r.name)}</h2></div>
@@ -154,20 +152,14 @@
         </div>` : ""}
 
         <div class="d-sec">
-          <h3>배달과 비교하면</h3>
+          <h3>재료비 계산</h3>
           <div class="receipt">
             <div class="rc-sec">
-              <p class="rc-label">집밥 1인분</p>
+              <p class="rc-label">1인분에 쓰는 양만큼</p>
               ${r.ing.map(([k, amt, use]) => `<div class="rc-row"><span>${esc(INGREDIENTS[k].name)} ${esc(amt)}</span><span class="num">${won(INGREDIENTS[k].price * use)}</span></div>`).join("")}
-              <div class="rc-row rc-total"><span>합계</span><span class="num">${won(c)}</span></div>
+              <div class="rc-row rc-total"><span>1인분 재료비</span><span class="num">${won(c)}</span></div>
+              <p class="rc-left">양념은 집에 있다고 보고 뺐어요. 재료를 살 때는 소포장 1개 값이 들어요 (위 재료 목록 참고).</p>
             </div>
-            <div class="rc-sec">
-              <div class="rc-row rc-total"><span>배달 · ${esc(r.delivery.name)}</span><span class="num">${won(d)}</span></div>
-              <p class="rc-left" style="margin-top:2px">${r.delivery.menu
-                ? `메뉴 ${won(r.delivery.menu)} (백석대 근처 식당 ${r.delivery.stores}곳 평균) + 배달팁 ${won(DELIVERY_TIP)}`
-                : "근처에 같은 메뉴가 없어 추정한 가격 (배달팁 포함)"}</p>
-            </div>
-            <div class="rc-sec rc-save"><span>한 끼에 아끼는 돈</span><b>${won(d - c)}</b></div>
           </div>
         </div>
 
@@ -202,48 +194,92 @@
   };
   window.addEventListener("hashchange", fromHash);
 
-  /* ---------- 장바구니 ---------- */
-  function planBasket(items) {
-    const set = new Set(items);
-    const stock = Object.fromEntries(items.map(k => [k, k === "rice" ? Infinity : 1]));
-    const made = [];
-    let riceUsed = 0;
-    // 재료를 많이 쓰는 레시피부터 채워야 장바구니 재료가 골고루 소진된다
-    for (const r of [...RECIPES].sort((a, b) => b.ing.length - a.ing.length)) {
-      if (!r.ing.every(([k, , use]) => set.has(k) && stock[k] >= use - 1e-9)) continue;
-      r.ing.forEach(([k, , use]) => { stock[k] -= use; if (k === "rice") riceUsed += use; });
-      made.push(r);
-    }
-    const buy = items.filter(k => k !== "rice").reduce((s, k) => s + INGREDIENTS[k].price, 0)
-      + riceUsed * INGREDIENTS.rice.price;
-    const deli = made.reduce((s, r) => s + r.delivery.price, 0);
-    const left = items.filter(k => k !== "rice" && stock[k] > 0.05)
-      .map(k => `${INGREDIENTS[k].name} ${Math.round(stock[k] * 100)}%`);
-    return { made, buy, deli, left, riceUsed };
+  /* ---------- 장바구니 만들기 (선택은 이 브라우저에만 저장) ---------- */
+  const BKEY = "fridge-basket";
+  let chosen;
+  try { chosen = JSON.parse(localStorage.getItem(BKEY)); } catch (e) {}
+  chosen = new Set(Array.isArray(chosen) ? chosen.filter(id => byId[id]) : BASKETS[0].recipes);
+  const saveBasket = () => { try { localStorage.setItem(BKEY, JSON.stringify([...chosen])); } catch (e) {} };
+
+  // 고른 메뉴 → 재료별 사용량 합계 → 소포장 몇 개를 사야 하는지 (밥은 공기 단위)
+  function planBasket(ids) {
+    const need = {};
+    ids.forEach(id => byId[id].ing.forEach(([k, , use]) => { need[k] = (need[k] || 0) + use; }));
+    const rows = Object.entries(need).map(([k, used]) => {
+      const rice = k === "rice";
+      const packs = rice ? used : Math.ceil(used - 1e-9);
+      return { k, used, packs, rice, price: packs * INGREDIENTS[k].price, left: rice ? 0 : packs - used };
+    }).sort((x, y) => x.rice - y.rice);
+    const buy = rows.reduce((s, x) => s + x.price, 0);
+    const leftValue = rows.reduce((s, x) => s + x.left * INGREDIENTS[x.k].price, 0);
+    const leftover = Object.fromEntries(rows.filter(x => x.left > 0.05).map(x => [x.k, x.left]));
+    // 이미 산 재료(남는 양)만으로 더 만들 수 있는 메뉴
+    const extra = RECIPES.filter(r => !ids.includes(r.id)
+      && r.ing.every(([k, , use]) => k === "rice" || (leftover[k] || 0) >= use - 1e-9));
+    return { rows, buy, leftValue, leftover, extra };
   }
 
-  $("#baskets").innerHTML = BASKETS.map(b => {
-    const p = planBasket(b.items);
-    if (!p.made.length) return "";
-    return `<article class="receipt">
-      <div class="rc-head"><small>SHOPPING RECEIPT</small><h3>${esc(b.name)}</h3></div>
+  $("#presets").innerHTML = BASKETS.map((b, i) =>
+    `<button type="button" class="pill-btn" data-preset="${i}">${esc(b.name)}</button>`).join("") +
+    `<button type="button" class="link-btn" data-preset="clear">비우기</button>`;
+
+  function renderPicker() {
+    $("#pick-list").innerHTML = RECIPES.map(r =>
+      `<button type="button" class="pick" data-id="${r.id}" aria-pressed="${chosen.has(r.id)}">
+        <span class="emos" aria-hidden="true">${emoRow(r)}</span><span class="nm">${esc(r.name)}</span><span class="num">${won(cost(r))}</span>
+      </button>`).join("");
+  }
+
+  function renderBasket() {
+    const ids = RECIPES.map(r => r.id).filter(id => chosen.has(id));
+    const n = ids.length;
+    if (!n) {
+      $("#my-basket").innerHTML = `<article class="receipt"><div class="rc-head"><small>MY BASKET</small><h3>이번 주 장바구니</h3></div>
+        <p class="rc-empty">왼쪽에서 이번 주에 만들 메뉴를 골라 주세요.</p></article>`;
+      return;
+    }
+    const p = planBasket(ids);
+    const split = Math.ceil(n / 2);
+    const row = (label, amount, cls = "") => `<div class="rc-row ${cls}"><span>${label}</span><span class="num">${amount}</span></div>`;
+    $("#my-basket").innerHTML = `<article class="receipt">
+      <div class="rc-head"><small>MY BASKET</small><h3>이번 주 ${n}끼</h3></div>
       <div class="rc-sec">
         <p class="rc-label">장보기</p>
-        ${b.items.filter(k => k !== "rice").map(k => `<div class="rc-row"><span>${INGREDIENTS[k].emoji} ${esc(INGREDIENTS[k].name)} ${esc(INGREDIENTS[k].pack)}${INGREDIENTS[k].src ? ` <small class="src">${esc(INGREDIENTS[k].src)}</small>` : ""}</span><span class="num">${won(INGREDIENTS[k].price)}</span></div>`).join("")}
-        <div class="rc-row"><span>${INGREDIENTS.rice.emoji} 밥 ${p.riceUsed}공기</span><span class="num">${won(p.riceUsed * INGREDIENTS.rice.price)}</span></div>
-        <div class="rc-row rc-total"><span>합계</span><span class="num">${won(p.buy)}</span></div>
+        ${p.rows.map(x => x.rice
+          ? row(`${INGREDIENTS.rice.emoji} 밥 ${+x.used.toFixed(1)}공기`, won(x.price))
+          : row(`${INGREDIENTS[x.k].emoji} ${esc(INGREDIENTS[x.k].name)} ${esc(INGREDIENTS[x.k].pack)}${x.packs > 1 ? ` ×${x.packs}` : ""}${INGREDIENTS[x.k].src ? ` <small class="src">${esc(INGREDIENTS[x.k].src)}</small>` : ""}`, won(x.price))).join("")}
+        ${row("합계", won(p.buy), "rc-total")}
+        <p class="rc-left">이번 주에 먹는 재료비는 ${won(p.buy - p.leftValue)} (한 끼 ${won((p.buy - p.leftValue) / n)})${Object.keys(p.leftover).length
+          ? ` · 남는 재료: ${Object.entries(p.leftover).map(([k, l]) => `${INGREDIENTS[k].name} ${Math.round(l * 100)}%`).join(", ")}` : " · 남는 재료 없음"}</p>
+      </div>
+      ${p.extra.length ? `<div class="rc-sec">
+        <p class="rc-label">남는 재료만으로 더 만들 수 있어요</p>
+        <div class="extra">${p.extra.slice(0, 4).map(r => `<button type="button" class="pill-btn" data-add="${r.id}">+ ${esc(r.name)}</button>`).join("")}</div>
+      </div>` : ""}
+      <div class="rc-sec">
+        <p class="rc-label">같은 ${n}끼를 배달로 먹는다면 (한 끼 평균 ${won(DELI)})</p>
+        ${row(`한 번에 한 끼씩 · 배달 ${n}번`, won(n * DELI))}
+        ${row(`두 끼로 나눠 먹으면 · 배달 ${split}번`, won(split * DELI))}
       </div>
       <div class="rc-sec">
-        <p class="rc-label">이걸로 만드는 ${p.made.length}끼</p>
-        ${p.made.map(r => `<div class="rc-row"><a href="#recipe=${r.id}">${esc(r.name)}</a><s class="num">${won(r.delivery.price)}</s></div>`).join("")}
-        <div class="rc-row rc-total"><span>배달로 시키면</span><span class="num">${won(p.deli)}</span></div>
-      </div>
-      <div class="rc-sec">
-        <div class="rc-save"><span>${p.made.length}끼에 아끼는 돈</span><b>${won(p.deli - p.buy)}</b></div>
-        <p class="rc-left">한 끼 ${won(p.buy / p.made.length)}${p.left.length ? ` · 남은 재료: ${p.left.join(", ")}` : ""}</p>
+        <div class="rc-save"><span>아끼는 돈</span><b>${won(n * DELI - p.buy)}</b></div>
+        <p class="rc-left">${split * DELI >= p.buy
+          ? `배달을 두 끼로 나눠 먹는 경우와 비교해도 ${won(split * DELI - p.buy)} 아껴요.`
+          : `배달을 두 끼로 나눠 먹는 경우보다는 ${won(p.buy - split * DELI)} 더 들지만, 남는 재료 ${won(p.leftValue)}어치는 다음 끼니에 이어 써요.`}</p>
       </div>
     </article>`;
-  }).join("");
+  }
+
+  $("#basket").addEventListener("click", e => {
+    const t = e.target.closest("[data-id],[data-preset],[data-add]");
+    if (!t) return;
+    if (t.dataset.preset === "clear") chosen.clear();
+    else if (t.dataset.preset) chosen = new Set(BASKETS[+t.dataset.preset].recipes);
+    else if (t.dataset.add) chosen.add(t.dataset.add);
+    else chosen.has(t.dataset.id) ? chosen.delete(t.dataset.id) : chosen.add(t.dataset.id);
+    saveBasket(); renderPicker(); renderBasket();
+  });
+  renderPicker(); renderBasket();
 
   /* ---------- 보관법 ---------- */
   const zoneOf = v => /실온/.test(v.keep) ? "room" : /^냉동/.test(v.keep) ? "freeze" : "cold";
