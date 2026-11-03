@@ -90,7 +90,9 @@
       ? `레시피 <b>${list.length}개</b> — 재료를 고르면 지금 만들 수 있는 것부터 보여 드려요.`
       : `지금 바로 만들 수 있는 레시피 <b>${readyN}개</b> · 조금만 더 사면 되는 레시피 ${list.length - readyN}개`;
 
-    $("#results").innerHTML = list.length ? list.map(({ r, missing }) => {
+    const LIMIT = 12, more = list.length - LIMIT;
+    const shown = showAll || more <= 0 ? list : list.slice(0, LIMIT);
+    $("#results").innerHTML = list.length ? shown.map(({ r, missing }) => {
       const badge = none ? ""
         : missing.length === 0 ? `<span class="badge ok">지금 바로 가능</span>`
         : `<span class="badge ${missing.length <= 2 ? "need" : "far"}">${missing.map(k => INGREDIENTS[k].name).join(", ")} 필요</span>`;
@@ -102,9 +104,12 @@
           <div class="price"><small>1인분 재료비</small><span class="num">${won(cost(r))}</span></div>
         </div>
       </button>`;
-    }).join("") : `<p class="empty">조건에 맞는 레시피가 없어요. 필터를 풀어 보세요.</p>`;
+    }).join("") + (shown.length < list.length ? `<button type="button" class="more-btn" id="more">레시피 ${more}개 더 보기</button>` : "")
+      : `<p class="empty">조건에 맞는 레시피가 없어요. 필터를 풀어 보세요.</p>`;
   }
+  let showAll = false;
   $("#results").addEventListener("click", e => {
+    if (e.target.closest("#more")) { showAll = true; renderResults(); return; }
     const c = e.target.closest(".card");
     if (c) openRecipe(c.dataset.id);
   });

@@ -163,6 +163,7 @@ h1, h2, h3 { margin: 0; line-height: 1.2; font-weight: 400; }
 .presets::before { content: "추천 장바구니"; font-size: 13px; font-weight: 700; color: var(--muted); margin-right: 4px; }
 .pill-btn { font: inherit; font-size: 14px; font-weight: 700; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 2px solid var(--ink); background: var(--door); color: var(--ink); cursor: pointer; }
 .pill-btn:hover { background: var(--butter-soft); }
+.more-btn { grid-column: 1 / -1; justify-self: center; font: inherit; font-weight: 700; padding: 12px 28px; border-radius: 999px; border: 1.5px solid var(--ink); background: var(--door); color: var(--ink); cursor: pointer; }
 .pick-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .pick { font: inherit; display: flex; align-items: center; gap: 10px; min-height: 60px; padding: 8px 14px 8px 10px; text-align: left; border-radius: 14px; border: 1.5px solid var(--line); background: var(--door); color: var(--ink); cursor: pointer; }
 .pick:hover { border-color: var(--ink); }
